@@ -1,5 +1,5 @@
 from wind_farm_parameters import get_wind_farm_names_from_params, get_wind_farm_param
-from wind_speed_distr_model import fit_and_select_model
+from wind_speed_distr_model import models, fit_and_select_model
 from wind_power_curve import wind_power_curve
 from wind_drought_analysis import normalize_data, create_continuous_speed_series, calculate_srepi, calculate_drought_periods, split_data_on_gaps, process_data_with_moving_window
 
@@ -10,7 +10,7 @@ import glob
 import matplotlib.pyplot as plt
 
 
-wind_speed_path = './BARRA2_wind'
+wind_speed_path = '../BARRA2_wind'
 plots_directory = './Windfarms_analysis_plots'
 if not os.path.exists(plots_directory):
     os.makedirs(plots_directory)
@@ -68,7 +68,7 @@ for windfarm_name in common_windfarms:
         speed_data, bins=50, density=True, alpha=0.6, color='g', label='Actual Data')
     xmin, xmax = plt.xlim()
     x = np.linspace(xmin, xmax, 100)
-    model_func = globals()[best_model_info['Model Name']].pdf
+    model_func = models[best_model_info['Model Name']].pdf
     plt.plot(x, model_func(
         x, *best_model_info['Params']), 'r-', label=f'{best_model_info["Model Name"]} Fit')
     plt.xlabel('Wind Speed (m/s)')

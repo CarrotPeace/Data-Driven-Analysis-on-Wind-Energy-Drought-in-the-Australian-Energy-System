@@ -8,7 +8,6 @@ import numpy as np
 import os
 from dateutil import parser
 import geopandas as gpd
-import seaborn as sns
 
 
 def read_drought_details_csv(windfarm_name, plots_directory):
@@ -43,8 +42,8 @@ def save_all_drought_details(windfarm_names, plots_directory, output_file):
         print("No drought details found for the provided wind farms.")
 
 
-plots_directory = './BARRA_DATA/Gen_Plots'
-all_drought_file = './BARRA_DATA/all_drought_details.csv'
+plots_directory = './Windfarms_analysis_plots'
+all_drought_file = './all_drought_details.csv'
 
 # Read the common windfarms from the file
 common_windfarms_file = os.path.join(plots_directory, 'common_windfarms.txt')
@@ -54,7 +53,7 @@ with open(common_windfarms_file, 'r') as file:
 save_all_drought_details(common_windfarms, plots_directory, all_drought_file)
 
 # Load the data
-drought_details = pd.read_csv('G:/BARRA_DATA/all_drought_details.csv')
+drought_details = pd.read_csv('./all_drought_details.csv')
 
 # Convert Start and End columns to datetime
 drought_details['Start'] = pd.to_datetime(
@@ -101,27 +100,11 @@ drought_data_by_scale = {
 output_folder = 'G:/BARRA_DATA/plots'
 os.makedirs(output_folder, exist_ok=True)
 
-# Plot ECDF for drought durations by time scale
-fig, ax = plt.subplots(figsize=(9, 4))
-
-for scale in time_scales:
-    scale_data = drought_details[drought_details['Scale'] == scale]
-    sns.ecdfplot(data=scale_data, x='Duration', ax=ax, label=scale)
-
-ax.set_xlabel('Drought Duration (days)')
-ax.set_ylabel('Cumulative Probability')
-ax.set_title('ECDF of Drought Durations by Time Scale')
-ax.legend()
-ax.grid(True)
-plt.tight_layout()
-plt.savefig(os.path.join(output_folder, 'ecdf_plot.png'))
-
 #  Plot the temporal analysis plots
 temporal_analysis_plots(all_drought_file, output_folder)
 
-
 # Load the natural earth dataset from a local file
-local_path = './ne_110m_admin_0_countries/ne_110m_admin_0_countries.shp'
+local_path = '../ne_110m_admin_0_countries/ne_110m_admin_0_countries.shp'
 australia = gpd.read_file(local_path)
 australia = australia[australia.NAME == "Australia"]
 

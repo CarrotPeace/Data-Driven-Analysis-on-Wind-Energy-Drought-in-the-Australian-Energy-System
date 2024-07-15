@@ -2,6 +2,7 @@ import os
 import geopandas as gpd
 import matplotlib.pyplot as plt
 import numpy as np
+from matplotlib.colors import LinearSegmentedColormap
 
 
 def geo_plots(australia, drought_details_with_latlon, model_colors, time_scales, output_folder):
@@ -49,6 +50,32 @@ def geo_plots(australia, drought_details_with_latlon, model_colors, time_scales,
     fig, axes = plt.subplots(nrows=2, ncols=4, figsize=(18, 8))
     axes = axes.flatten()
 
+    # Determine the global colorbar limits based on the Duration values
+    duration_min = drought_details_with_latlon['Duration'].min()
+    duration_max = drought_details_with_latlon['Duration'].max()
+
+    # Use the coolwarm colormap as the base
+    base_cmap = plt.cm.coolwarm
+
+    # Adjust the colormap to give more resolution to the 0-3 range
+    ncolors = 256
+    custom_color_pts = np.concatenate([
+        np.linspace(0, 0.2, int(ncolors * 0.03)),  # More colors for 0-1
+        np.linspace(0.2, 0.5, int(ncolors * 0.17)),  # More colors for 1-3
+        np.linspace(0.5, 0.8, int(ncolors * 0.3)),  # More colors for 3-6
+        np.linspace(0.8, 1, int(ncolors * 0.5))  # Remaining colors for 6-rest
+    ])
+    custom_colors = base_cmap(custom_color_pts)
+
+    custom_cmap = LinearSegmentedColormap.from_list(
+        'custom_coolwarm', custom_colors)
+
+    norm = plt.Normalize(vmin=duration_min, vmax=duration_max)
+
+    # Create subplots for scatter plots for each time scale
+    fig, axes = plt.subplots(nrows=2, ncols=4, figsize=(18, 8))
+    axes = axes.flatten()
+
     for i, scale in enumerate(time_scales):
         if i >= len(axes):
             break
@@ -58,15 +85,13 @@ def geo_plots(australia, drought_details_with_latlon, model_colors, time_scales,
         scale_data = drought_details_with_latlon[drought_details_with_latlon['Scale'] == scale]
         scatter = ax.scatter(
             scale_data['longitude_jitter'], scale_data['latitude_jitter'],
-            s=scale_data['Frequency'] * 0.5,  # Reduce size multiplier
+            s=scale_data['Frequency'] * 0.3,  # Reduce size multiplier
             c=scale_data['Duration'],  # Duration represented by color
-            cmap='coolwarm', alpha=1, edgecolors="w", linewidth=0.5
+            cmap=custom_cmap, norm=norm, alpha=1, edgecolors="w", linewidth=0.5
         )
 
         # Create a colorbar with the same colormap and normalization
-        norm = plt.Normalize(
-            scale_data['Duration'].min(), scale_data['Duration'].max())
-        sm = plt.cm.ScalarMappable(cmap='coolwarm', norm=norm)
+        sm = plt.cm.ScalarMappable(cmap=custom_cmap, norm=norm)
         sm.set_array([])
         cbar = plt.colorbar(sm, ax=ax)
         cbar.set_label('Drought Duration (Days)')

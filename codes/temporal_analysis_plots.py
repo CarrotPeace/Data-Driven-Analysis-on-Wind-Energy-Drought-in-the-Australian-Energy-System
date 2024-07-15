@@ -2,6 +2,7 @@ import os
 import pandas as pd
 import matplotlib.pyplot as plt
 import calendar
+import seaborn as sns
 
 
 def map_month_to_season(month):
@@ -17,12 +18,30 @@ def map_month_to_season(month):
     return None
 
 
+def plot_ecdf(drought_details, time_scales, output_folder):
+    fig, ax = plt.subplots(figsize=(9, 4))
+
+    for scale in time_scales:
+        scale_data = drought_details[drought_details['Scale'] == scale]
+        sns.ecdfplot(data=scale_data, x='Duration', ax=ax, label=scale)
+
+    ax.set_xlabel('Drought Duration (days)')
+    ax.set_ylabel('Cumulative Probability')
+    ax.set_title('ECDF of Drought Durations by Time Scale')
+    ax.legend()
+    ax.grid(True)
+    plt.tight_layout()
+    plt.savefig(os.path.join(output_folder, 'ecdf_plot.png'))
+
+
 def temporal_analysis_plots(all_drought_file, output_folder):
     fontsize = 14
     drought_details = pd.read_csv(all_drought_file)
     drought_details['Start'] = pd.to_datetime(drought_details['Start'])
     time_scales = ['1h', '4h', '12h', '1D', '2D', '3D', '5D']
     seasons = ['Spring', 'Summer', 'Autumn', 'Winter']
+
+    plot_ecdf(drought_details, time_scales, output_folder)
 
     fig, axes = plt.subplots(2, 4, figsize=(18, 8))
     axes = axes.flatten()
